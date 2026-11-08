@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Personna UK – Software, Cloud &amp; AI Solutions</title>
+<style>
+:root{--bg:#f6f7fb;--surface:#fff;--text:#0f172a;--muted:#5b6478;--line:#e2e6f0;--a:#6d4aff;--b:#00b8d9;--glow:rgba(109,74,255,.18);color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b0f1a;--surface:#131a2b;--text:#eef1fa;--muted:#9aa5bf;--line:#243049;--a:#8b6dff;--b:#2fd3f0;--glow:rgba(139,109,255,.25);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0b0f1a;--surface:#131a2b;--text:#eef1fa;--muted:#9aa5bf;--line:#243049;--a:#8b6dff;--b:#2fd3f0;--glow:rgba(139,109,255,.25);color-scheme:dark}
+html{scroll-behavior:smooth;scroll-padding-top:calc(72px + env(safe-area-inset-top,0px))}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.6;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{font-weight:800;font-size:20px;display:flex;gap:8px;align-items:center}
+.logo i{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--a),var(--b));display:inline-block}
+.links{display:flex;gap:24px;align-items:center;font-size:15px;color:var(--muted)}
+.links a:hover{color:var(--text)}
+.btn{display:inline-block;padding:11px 22px;border-radius:12px;font-weight:600;border:1px solid var(--line);background:var(--surface);cursor:pointer;font:inherit;font-weight:600;color:var(--text);transition:.2s}
+.btn:hover{transform:translateY(-2px)}
+.btn.p{background:linear-gradient(135deg,var(--a),var(--b));color:#fff;border:0;box-shadow:0 8px 24px var(--glow)}
+.icon{width:40px;height:40px;padding:0;border-radius:50%}
+#menu{display:none}
+.hero{position:relative;padding:84px 0 70px;overflow:hidden}
+.hero:before,.hero:after{content:"";position:absolute;width:420px;height:420px;border-radius:50%;filter:blur(90px);opacity:.5;z-index:-1;animation:float 12s ease-in-out infinite}
+.hero:before{background:var(--a);top:-120px;left:-80px}
+.hero:after{background:var(--b);right:-100px;top:60px;animation-delay:-6s}
+@keyframes float{50%{transform:translate(40px,30px)}}
+.grid2{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
+.tag{display:inline-block;padding:6px 14px;border-radius:99px;background:var(--surface);border:1px solid var(--line);font-size:13px;color:var(--muted);margin-bottom:18px}
+h1{font-size:clamp(34px,5.5vw,60px);line-height:1.08;margin:0 0 18px;letter-spacing:-.02em}
+.grad{background:linear-gradient(135deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:18px;color:var(--muted);max-width:540px}
+.cta{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap}
+.code{background:#0d1324;color:#d6def5;border-radius:16px;padding:18px;font:13px/1.7 ui-monospace,Menlo,Consolas,monospace;box-shadow:0 30px 60px var(--glow);border:1px solid #243049;min-height:250px}
+.dots span{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;background:#ff5f57}.dots span:nth-child(2){background:#febc2e}.dots span:nth-child(3){background:#28c840}
+.cur{display:inline-block;width:8px;height:15px;background:var(--b);vertical-align:-2px;animation:bl 1s steps(1) infinite}@keyframes bl{50%{opacity:0}}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;text-align:center}
+.stat b{font-size:34px;display:block}.stat span{color:var(--muted);font-size:14px}
+section{padding:70px 0}
+h2{font-size:clamp(26px,3.6vw,38px);margin:0 0 10px;letter-spacing:-.01em}
+.sub{color:var(--muted);max-width:620px;margin:0 0 32px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.tab{padding:10px 18px;border-radius:99px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font:inherit;color:var(--muted);transition:.2s}
+.tab.on{background:linear-gradient(135deg,var(--a),var(--b));color:#fff;border-color:transparent}
+.panel{display:grid;grid-template-columns:1fr 1fr;gap:30px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:32px;animation:in .4s}
+@keyframes in{from{opacity:0;transform:translateY(10px)}}
+.panel h3{margin:0 0 10px;font-size:24px}.panel ul{padding:0;list-style:none;margin:16px 0 0}
+.panel li{padding:6px 0 6px 26px;position:relative}.panel li:before{content:"✓";position:absolute;left:0;color:var(--a);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start}
+.chip{padding:8px 14px;border-radius:10px;background:var(--bg);border:1px solid var(--line);font-size:14px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;transition:.25s}
+.card:hover{transform:translateY(-6px);box-shadow:0 18px 40px var(--glow);border-color:var(--a)}
+.card .n{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--a),var(--b));margin-bottom:14px}
+.card h4{margin:0 0 6px;font-size:18px}.card p{margin:0;color:var(--muted);font-size:15px}
+.toggle{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px;margin-bottom:26px}
+.toggle button{border:0;background:none;padding:8px 20px;border-radius:99px;cursor:pointer;font:inherit;color:var(--muted)}
+.toggle button.on{background:linear-gradient(135deg,var(--a),var(--b));color:#fff}
+.price{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.plan{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px;position:relative}
+.plan.hot{border:2px solid var(--a);box-shadow:0 20px 50px var(--glow)}
+.plan.hot:before{content:"Most popular";position:absolute;top:-13px;left:24px;background:var(--a);color:#fff;font-size:12px;padding:3px 12px;border-radius:99px}
+.plan .amt{font-size:40px;font-weight:800;margin:10px 0}.plan .amt small{font-size:14px;color:var(--muted);font-weight:500}
+.plan ul{list-style:none;padding:0;margin:0 0 22px;color:var(--muted)}.plan li{padding:5px 0}.plan li:before{content:"✓ ";color:var(--a);font-weight:700}
+.quote{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:34px;text-align:center;min-height:170px}
+.quote p{font-size:19px;margin:0 0 12px;transition:opacity .3s}.quote span{color:var(--muted);font-size:14px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:30px}
+.form .full{grid-column:1/-1}
+input,select,textarea{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--a);border-color:transparent}
+.err{border-color:#ef4444!important}
+#ok{display:none;text-align:center;padding:30px;background:var(--surface);border:1px solid var(--line);border-radius:20px}
+footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.rv{opacity:0;transform:translateY(24px);transition:.7s}.rv.show{opacity:1;transform:none}
+@media(max-width:860px){.grid2,.panel{grid-template-columns:1fr}.stats,.cards{grid-template-columns:1fr 1fr}.price{grid-template-columns:1fr}.links{display:none;position:absolute;top:64px;left:0;right:0;background:var(--bg);flex-direction:column;padding:12px 20px 20px;border-bottom:1px solid var(--line);align-items:stretch;gap:0}.links a{padding:13px 0;font-size:16px;border-bottom:1px solid var(--line)}.links a.btn{margin-top:14px;text-align:center;border:0;padding:13px}.links.open{display:flex}#menu{display:grid;place-items:center}.form{grid-template-columns:1fr}}
+@media(max-width:560px){.wrap{padding:0 16px}.hero{padding:44px 0 36px}.hero:before,.hero:after{width:260px;height:260px}.lead{font-size:16px}.cta .btn{flex:1;text-align:center;padding:13px 10px}.code{font-size:11.5px;padding:14px;min-height:210px}.stats{gap:10px}.stat{padding:16px 10px}.stat b{font-size:26px}.stat span{font-size:12px}section{padding:46px 0}.cards{grid-template-columns:1fr}.tabs{flex-wrap:nowrap;overflow-x:auto;margin-left:-16px;margin-right:-16px;padding:0 16px 8px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{flex:none;white-space:nowrap}.panel{padding:20px}.panel h3{font-size:20px}.toggle{display:flex}.toggle button{flex:1;padding:10px 6px;font-size:14px}.plan{padding:22px}.plan .amt{font-size:34px}.quote{padding:24px 18px}.quote p{font-size:17px}.form{padding:18px}footer .wrap{flex-direction:column;text-align:center}}
+input,select,textarea{font-size:16px}
+button,.btn,.tab{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><nav>
+<a class="logo" href="#top"><i></i>Personna UK</a>
+<div class="links" id="links"><a href="#services">Services</a><a href="#process">Process</a><a href="#pricing">Pricing</a><a href="#reviews">Clients</a><a class="btn p" href="#contact">Get a quote</a></div>
+<div style="display:flex;gap:8px"><button class="btn icon" id="theme" aria-label="Toggle theme">◐</button><button class="btn icon" id="menu" aria-label="Menu">☰</button></div>
+</nav></div></header>
+
+<main id="top">
+<div class="hero"><div class="wrap grid2">
+<div>
+<span class="tag">● Trusted by 120+ businesses worldwide</span>
+<h1>We build <span class="grad">fast, secure &amp; scalable</span> software for your business.</h1>
+<p class="lead">Web development, ERP, POS, digital marketing, video editing, AI and more – one expert team that takes your idea from concept to launch and beyond.</p>
+<div class="cta"><a class="btn p" href="#contact">Start your project</a><a class="btn" href="#services">Explore services</a></div>
+</div>
+<div class="code"><div class="dots"><span></span><span></span><span></span></div><pre id="code" style="margin:14px 0 0;white-space:pre-wrap"></pre></div>
+</div></div>
+
+<div class="wrap"><div class="stats rv">
+<div class="stat"><b data-n="250">0</b><span>Projects delivered</span></div>
+<div class="stat"><b data-n="120">0</b><span>Happy clients</span></div>
+<div class="stat"><b data-n="12">0</b><span>Years experience</span></div>
+<div class="stat"><b data-n="99">0</b><span>% uptime (SLA)</span></div>
+</div></div>
+
+<section id="services"><div class="wrap">
+<h2 class="rv">Everything your business needs, one stack</h2>
+<p class="sub rv">Pick a service to see how we can help.</p>
+<div class="tabs rv" id="tabs"></div>
+<div class="panel" id="panel"></div>
+</div></section>
+
+<section id="process"><div class="wrap">
+<h2 class="rv">How we work</h2><p class="sub rv">A clear, transparent process – no surprises.</p>
+<div class="cards">
+<div class="card rv"><div class="n">1</div><h4>Discover</h4><p>We learn your goals, users and constraints.</p></div>
+<div class="card rv"><div class="n">2</div><h4>Design</h4><p>Architecture, UX and a clickable prototype.</p></div>
+<div class="card rv"><div class="n">3</div><h4>Build</h4><p>Agile sprints with weekly demos and CI/CD.</p></div>
+<div class="card rv"><div class="n">4</div><h4>Launch &amp; Support</h4><p>Go live, monitor, and keep improving 24/7.</p></div>
+</div></div></section>
+
+<section id="pricing"><div class="wrap">
+<h2 class="rv">Simple, flexible pricing</h2><p class="sub rv">Choose a one-time project or a monthly retainer.</p>
+<div class="toggle"><button class="on" data-m="0">One-time project</button><button data-m="1">Monthly support</button></div>
+<div class="price">
+<div class="plan rv"><h4>Starter</h4><div class="amt" data-p="1200,150">$1,200</div><ul><li>Business website</li><li>Responsive design</li><li>Basic SEO</li></ul><a class="btn" href="#contact">Choose Starter</a></div>
+<div class="plan hot rv"><h4>Growth</h4><div class="amt" data-p="4500,600">$4,500</div><ul><li>Custom web app / API</li><li>Admin dashboard</li><li>Cloud deployment</li><li>Priority support</li></ul><a class="btn p" href="#contact">Choose Growth</a></div>
+<div class="plan rv"><h4>Enterprise</h4><div class="amt" data-p="12000,1800">$12,000</div><ul><li>ERP / large systems</li><li>AI &amp; integrations</li><li>Security audit</li><li>Dedicated team</li></ul><a class="btn" href="#contact">Talk to us</a></div>
+</div></div></section>
+
+<section id="reviews"><div class="wrap">
+<h2 class="rv">What clients say</h2><p class="sub rv">&nbsp;</p>
+<div class="quote rv"><p id="qt"></p><span id="qa"></span></div>
+</div></section>
+
+<section id="contact"><div class="wrap" style="max-width:760px">
+<h2 class="rv">Tell us about your project</h2><p class="sub rv">We reply within one business day.</p>
+<form class="form" id="form" novalidate>
+<input name="name" placeholder="Your name" required>
+<input name="email" type="email" placeholder="Email address" required>
+<select name="svc" class="full"><option>Web Development</option><option>ERP Systems</option><option>POS Software</option><option>Digital Marketing</option><option>Video Editing</option><option>Custom Software</option><option>Mobile Apps</option><option>Cloud &amp; DevOps</option><option>AI &amp; Automation</option><option>Cybersecurity</option><option>UI/UX &amp; Branding</option><option>IT Support</option></select>
+<textarea class="full" name="msg" rows="4" placeholder="Describe what you need…" required></textarea>
+<button class="btn p full" type="submit">Send message</button>
+</form>
+<div id="ok"><h3>Thank you! 🎉</h3><p>We’ve received your request and will be in touch shortly.</p></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><span>© 2026 Personna UK. All rights reserved.</span><span>Web · ERP · POS · Marketing · Video · AI</span></div></footer>
+
+<script>
+const S={
+"Web Development":{t:"Websites & web applications",d:"Business websites, e-commerce stores, portals and REST APIs – fast, secure and built to convert visitors into customers.",l:["Corporate & portfolio websites","E-commerce (WooCommerce, Shopify)","Custom web apps & REST APIs","Speed, SEO & maintenance"],c:["WordPress","WooCommerce","Shopify","Elementor","C#",".NET","React","Node.js","PostgreSQL"]},
+"ERP Systems":{t:"ERP & business management",d:"One system for your whole company – inventory, purchase, sales, accounts, HR and projects, tailored to your industry.",l:["Inventory & warehouse","Purchase, sales & invoicing","Accounts, HR & payroll","Project & production tracking","Reports & dashboards"],c:["Inventory","Accounting","HRM","CRM","Manufacturing","Multi-branch"]},
+"Cloud & DevOps":{t:"Cloud infrastructure",d:"Deploy, scale and monitor on Azure, AWS or your own servers with automated pipelines.",l:["CI/CD pipelines","Docker & Kubernetes","Cloud migration","Monitoring & cost control"],c:["Azure","AWS","Docker","Kubernetes","Terraform","GitHub Actions"]},
+"Mobile Apps":{t:"iOS & Android apps",d:"Native-feel cross-platform apps your customers will love, with secure backends.",l:["Cross-platform with .NET MAUI","UI/UX design","Offline & push notifications","App store launch"],c:["MAUI","Flutter","Swift","Kotlin","Firebase"]},
+"AI & Automation":{t:"Smart AI solutions",d:"Chatbots, document intelligence and workflow automation that save hours every week.",l:["AI assistants & chatbots","Process automation","Data dashboards","Custom integrations"],c:["OpenAI","Python","ML.NET","Power BI","Zapier"]},
+"Security":{t:"Cybersecurity",d:"Protect your apps and data with audits, hardening and continuous monitoring.",l:["Penetration testing","Secure code review","Identity & MFA","Backup & recovery"],c:["OWASP","OAuth2","SSO","WAF","Zero Trust"]},
+"POS Software":{t:"POS & retail systems",d:"Fast point-of-sale for shops, restaurants and multi-branch chains, with live stock and sales reports.",l:["Retail & restaurant POS","Barcode, receipt & card support","Multi-branch stock sync","Online + offline billing","Daily sales & profit reports"],c:["Barcode","Thermal printer","bKash/Nagad","Stock","Loyalty","Offline mode"]},
+"Digital Marketing":{t:"Digital marketing & growth",d:"Get found, get leads, get sales – data-driven campaigns that bring real customers to your business.",l:["Facebook & Instagram ads","Google Ads & SEO","Social media management","Lead generation funnels","Email & WhatsApp marketing"],c:["Meta Ads","Google Ads","SEO","Analytics","Pixel & CAPI","Email"]},
+"Video Editing":{t:"Video editing & motion",d:"Scroll-stopping videos for ads, reels, product launches and brand stories – edited, colored and delivered fast.",l:["Reels, Shorts & TikTok edits","Ad & promo videos","Motion graphics & animation","3D product visuals","Color grading & sound"],c:["Premiere Pro","After Effects","DaVinci","Final Cut","Blender","AI video"]},
+"Custom Software":{t:"Custom software development",d:"Desktop, web and internal tools built exactly for your workflow – no bloated off-the-shelf software.",l:["Business process software","Desktop & web applications","Third-party integrations","Legacy system upgrade"],c:["C#","Python","Java","SQL","API","Automation"]},
+"UI/UX & Branding":{t:"Design, UI/UX & branding",d:"Logos, brand identity, app screens and marketing creatives that make your business look professional.",l:["Logo & brand identity","App & website UI/UX","Social media creatives","Banners & print design"],c:["Figma","Photoshop","Illustrator","Canva"]},
+"IT Support":{t:"IT support & networking",d:"Keep your team running – hardware, network, CCTV, email, backup and on-call technical support.",l:["Office network & Wi-Fi","CCTV & security systems","Hardware & software support","Annual maintenance (AMC)"],c:["LAN/WAN","CCTV","Servers","Backup","Microsoft 365"]}};
+const tabs=document.getElementById('tabs'),panel=document.getElementById('panel');
+function show(k){[...tabs.children].forEach(b=>b.classList.toggle('on',b.textContent===k));const s=S[k];
+panel.style.animation='none';panel.offsetWidth;panel.style.animation='';
+panel.innerHTML='<div><h3>'+s.t+'</h3><p style="color:var(--muted);margin:0">'+s.d+'</p><ul>'+s.l.map(x=>'<li>'+x+'</li>').join('')+'</ul></div><div class="chips">'+s.c.map(x=>'<span class="chip">'+x+'</span>').join('')+'</div>';}
+Object.keys(S).forEach(k=>{const b=document.createElement('button');b.className='tab';b.textContent=k;b.onclick=()=>show(k);tabs.appendChild(b)});
+show(Object.keys(S)[0]);
+
+const lines=['// Program.cs','var app = WebApplication.Create();','','app.MapGet("/api/status", () =>','    new { company = "Personna UK",','          uptime = "99.99%",','          status = "Ready to build" });','','app.Run();'];
+const code=document.getElementById('code');let li=0,ci=0,out='';
+(function type(){if(li>=lines.length){code.innerHTML=out+'<span class="cur"></span>';return}
+const ln=lines[li];out+=ln[ci]||'';ci++;code.innerHTML=out.replace(/</g,'&lt;')+'<span class="cur"></span>';
+if(ci>ln.length){out+='\n';li++;ci=0;setTimeout(type,120)}else setTimeout(type,24)})();
+
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('show');
+e.target.querySelectorAll('[data-n]').forEach(c=>{const n=+c.dataset.n;let v=0;const st=Math.max(1,n/60);const t=setInterval(()=>{v=Math.min(n,v+st);c.textContent=Math.round(v)+(n>=100&&n!==120&&n!==250?'':'+');if(v>=n)clearInterval(t)},25)});io.unobserve(e.target)}}),{threshold:.15});
+document.querySelectorAll('.rv').forEach(e=>io.observe(e));
+
+document.querySelectorAll('.toggle button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.toggle button').forEach(x=>x.classList.toggle('on',x===b));const m=+b.dataset.m;
+document.querySelectorAll('[data-p]').forEach(p=>{const v=p.dataset.p.split(',')[m];p.innerHTML='$'+(+v).toLocaleString('en-US')+(m?' <small>/month</small>':'')})});
+
+const Q=[["They delivered our ERP on time and the team was a pleasure to work with.","Operations Manager, Manufacturing"],["Our website speed improved 3× and sales grew right after the relaunch.","Founder, E-commerce brand"],["Reliable, professional and always available when we need support.","CTO, Logistics startup"]];
+let qi=0;const qt=document.getElementById('qt'),qa=document.getElementById('qa');
+function q(){qt.style.opacity=0;setTimeout(()=>{qt.textContent='“'+Q[qi][0]+'”';qa.textContent='— '+Q[qi][1];qt.style.opacity=1;qi=(qi+1)%Q.length},300)}
+q();setInterval(q,4500);
+
+const root=document.documentElement;
+document.getElementById('theme').onclick=()=>{const dark=root.dataset.theme?root.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;root.dataset.theme=dark?'light':'dark'};
+const links=document.getElementById('links');
+document.getElementById('menu').onclick=()=>links.classList.toggle('open');
+links.onclick=()=>links.classList.remove('open');
+
+const f=document.getElementById('form');
+f.onsubmit=e=>{e.preventDefault();let ok=true;
+f.querySelectorAll('[required]').forEach(i=>{const bad=!i.value.trim()||(i.type==='email'&&!/^\S+@\S+\.\S+$/.test(i.value));i.classList.toggle('err',bad);if(bad)ok=false});
+if(ok){f.style.display='none';document.getElementById('ok').style.display='block'}};
+</script>
+</body>
+</html>
