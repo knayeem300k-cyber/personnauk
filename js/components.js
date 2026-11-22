@@ -210,6 +210,7 @@ const Crud = {
         const r = Store.add(col, S.make ? S.make(v) : v);
         if (then) then(r);
         if (S.after) S.after(r, true);
+        logWork(`Added ${S.name.toLowerCase()} ${S.label ? S.label(r) : ""}`.trim(), col === "orders" ? r.id : r.order);
         Logic.sync();
       }
     });
@@ -223,9 +224,10 @@ const Crud = {
         const e = S.validate && S.validate(v, r); if (e) return e;
         Store.update(col, id, v);
         if (S.after) S.after(r, false);
+        logWork(`Updated ${S.name.toLowerCase()} ${S.label ? S.label(r) : ""}`.trim(), col === "orders" ? r.id : r.order);
         Logic.sync();
       },
-      onDelete: () => { Store.remove(col, id); if (S.removed) S.removed(r); Logic.sync(); },
+      onDelete: () => { Store.remove(col, id); if (S.removed) S.removed(r); logWork(`Deleted ${S.name.toLowerCase()} ${S.label ? S.label(r) : ""}`.trim(), col === "orders" ? "" : r.order); Logic.sync(); },
       extra: S.extra ? S.extra(r) : []
     });
   }
@@ -241,6 +243,7 @@ Actions.doc = el => {
   const o = Store.get("orders", el.dataset.o), s = +el.dataset.s, i = +el.dataset.i;
   if (!o) return;
   o.docs[s][i] = NEXT[o.docs[s][i]];
+  logWork(`${STAGES[s].docs[i]}: ${LABEL[o.docs[s][i]].toLowerCase()}`, o.id);
   Logic.stamp(o); Store.save(); App.render();
 };
 const docItems = (o, s) => STAGES[s].docs.map((d, j) => ({ label: d, note: LABEL[o.docs[s][j]], s: o.docs[s][j], act: { act: "doc", o: o.id, s, i: j } }));

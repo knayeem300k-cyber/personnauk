@@ -6,6 +6,7 @@ Schemas.orders = {
   name: "Order", label: r => r.id,
   fields: r => [
     { k: "id", l: "PO number", req: 1, ro: !!r }, buyerField(r),
+    { k: "merch", l: "Merchandiser (blank = buyer's merchandiser)", t: "select", o: Team.opts(r && r.merch) },
     { k: "style", l: "Style code", req: 1 }, { k: "product", l: "Product" },
     { k: "qty", l: "Quantity (pcs)", t: "number", req: 1 }, { k: "price", l: "Unit price, FOB ($)", t: "number", req: 1 },
     { k: "delivery", l: "PO delivery date", t: "date", req: 1 }, { k: "contractDelivery", l: "Contract delivery date", t: "date" },
@@ -14,7 +15,7 @@ Schemas.orders = {
     { k: "notes", l: "Notes", t: "textarea", full: 1 }
   ],
   validate: (v, r) => !r && Store.get("orders", v.id) ? "This PO number already exists." : !(v.qty > 0) ? "Quantity must be more than 0." : "",
-  make: v => ({ ...v, style: v.style.toUpperCase(), docs: newDocs(), created: iso(TODAY) }),
+  make: v => ({ ...v, style: v.style.toUpperCase(), merch: v.merch || (Store.all("buyers").find(b => b.name === v.buyer) || {}).merch || "", docs: newDocs(), created: iso(TODAY) }),
   after: (r, isNew) => { if (isNew) location.hash = "#order/" + encodeURIComponent(r.id); },
   /* Deleting an order also deletes its samples, bookings, inspections, shipments and payments */
   removed: r => {
@@ -32,7 +33,7 @@ Pages.add({
     const sel = Store.get("orders", UI.pick.ord), r = sel && Logic.review(sel);
     const rows = [...all].sort((a, b) => Logic.info(a).closed - Logic.info(b).closed || String(a.delivery).localeCompare(String(b.delivery))).map(o => {
       const closed = Logic.info(o).closed;
-      return { cells: [o.id, o.buyer, o.style, num(o.qty), money(o.qty * o.price), fmtD(o.delivery), o.payment, st(closed ? "Closed" : Logic.review(o).chip)], act: { act: "open", href: "#order/" + o.id } };
+      return { cells: [o.id, o.buyer, Team.name(Team.ofOrder(o)) || "–", o.style, num(o.qty), money(o.qty * o.price), fmtD(o.delivery), o.payment, st(closed ? "Closed" : Logic.review(o).chip)], act: { act: "open", href: "#order/" + o.id } };
     });
     const issues = rv.filter(x => !x[1].ok).length, conflicts = rv.filter(x => x[1].date).length, lcp = act.filter(o => o.lc === "Pending").length;
 
@@ -40,7 +41,7 @@ Pages.add({
       ["Open POs", act.length, "Value " + money(sum(act, o => o.qty * o.price))],
       ["Under review", issues, `${conflicts} with a date conflict`, conflicts ? "bd" : issues ? "wn" : "ok"],
       ["L/C pending", lcp, lcp ? "Follow up with the buyer" : "All received", lcp ? "wn" : "ok"]
-    ]) + `<div class="g2">${TB("Purchase orders", ["PO", "Buyer", "Style", "Qty", "Value", "Delivery", "Payment", "Review"], rows, { tools: '<small class="mute">Click a row to open the order file</small>' })}${
+    ]) + `<div class="g2">${TB("Purchase orders", ["PO", "Buyer", "Merchandiser", "Style", "Qty", "Value", "Delivery", "Payment", "Review"], rows, { tools: '<small class="mute">Click a row to open the order file</small>' })}${
       sel ? CK("PO review checks", r.checks, {
         tools, foot: `<div class="card-foot"><button class="btn sm" data-act="open" data-href="#order/${esc(sel.id)}">Open order file</button><button class="btn sm g" data-act="edit" data-col="orders" data-id="${esc(sel.id)}">Edit PO</button>${r.ok ? "" : `<button class="btn sm g" data-act="aiEmail" data-id="${esc(sel.id)}">Draft email to buyer</button>`}</div>`
       }) : CK("PO review checks", [], { empty: "No open orders." })

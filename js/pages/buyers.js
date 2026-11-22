@@ -29,7 +29,7 @@ function buyerView(id) {
     title: b.name,
     head: `<div class="vh">${buyerLogo(b, "lg")}<div><h2>${esc(b.name)}</h2><p class="mute">${esc(b.country || "Country not set")} · ${esc(b.currency || "–")} <span class="chip c-${TONES[b.status || "Active"]}">${esc(b.status || "Active")}</span></p></div></div>`,
     body: `<div class="vone">
-        <h3 class="sub3">1. Buyer information</h3>${kv([["Buyer name", b.name], ["Country / market", b.country], ["Status", b.status || "Active"], ["Departments", bDepts(b).join(", ")], ["Buyer portal", b.portal], ["Working calendar", b.calendar]])}
+        <h3 class="sub3">1. Buyer information</h3>${kv([["Buyer name", b.name], ["Country / market", b.country], ["Status", b.status || "Active"], ["Merchandiser in charge", Team.name(b.merch)], ["Departments", bDepts(b).join(", ")], ["Buyer portal", b.portal], ["Working calendar", b.calendar]])}
         <h3 class="sub3">2. Commercial</h3>${kv([["Currency", b.currency], ["Payment terms", b.payment], ["Incoterms", b.incoterm]])}
         <h3 class="sub3">3. Orders</h3>${kv([["Orders", `${os.length} (${open.length} open)`], ["Order quantity", num(sum(os, o => o.qty)) + " pcs"], ["Order value", money(sum(os, o => o.qty * o.price))], ["Styles", styles.join(", ")]])}
         <h3 class="sub3">4. Contact persons <span class="chip c-p">${bContacts(b).length}</span></h3>${bContactsHtml(b)}
@@ -75,6 +75,7 @@ Schemas.buyers = {
     { k: "logo", l: "Buyer logo", t: "image", full: 1 },
     { k: "name", l: "Buyer / brand name", req: 1 }, { k: "country", l: "Country / market", req: 1 },
     { k: "currency", l: "Default currency", t: "select", o: CURRENCIES }, { k: "status", l: "Buyer status", t: "select", o: ["Active", "Inactive"] },
+    { k: "merch", l: "Merchandiser in charge", t: "select", o: Team.opts() },
     { k: "contacts", l: "Contact persons", t: "list", item: "Contact", first: "main contact", add: "Add contact person",
       cols: [["name", "Name"], ["role", "Designation"], ["email", "Email", "email"], ["phone", "Phone", "tel"], ["department", "Department(s), e.g. Adult, Kids"]] },
     { k: "payment", l: "Payment terms", t: "select", o: BUYER_PAY }, { k: "incoterm", l: "Incoterms", t: "select", o: INCOTERMS },

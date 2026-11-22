@@ -3,7 +3,7 @@
 Pages.add({
   id: "order", nav: false, navId: "orders", filter: false,
   title: p => "Order " + p,
-  sub: p => { const o = Store.get("orders", p); return o ? `${o.buyer} · ${o.style} ${o.product || ""} · ${num(o.qty)} pcs · ${money(o.qty * o.price)}` : "Order not found"; },
+  sub: p => { const o = Store.get("orders", p); return o ? `${o.buyer} · ${o.style} ${o.product || ""} · ${num(o.qty)} pcs · ${money(o.qty * o.price)} · Merchandiser: ${Team.name(Team.ofOrder(o)) || "not assigned"}` : "Order not found"; },
   buttons: p => `<a class="btn g" href="#orders">Back to orders</a>${Store.get("orders", p) ? `<button class="btn" data-act="edit" data-col="orders" data-id="${esc(p)}">Edit order</button>` : ""}`,
   render(p) {
     const o = Store.get("orders", p);

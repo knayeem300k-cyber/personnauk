@@ -28,7 +28,7 @@ Schemas.devs = {
     { k: "product", l: "Product description", req: 1 }, { k: "factory", l: "Factory" },
     { k: "status", l: "Development status", t: "select", o: DEV_ST },
     { k: "due", l: "Target approval date", t: "date", d: addDays(iso(TODAY), 45) },
-    { k: "merch", l: "Merchandiser" },
+    { k: "merch", l: "Merchandiser", t: "select", o: Team.opts(r && r.merch) },
     { k: "colours", l: "Colourways (e.g. Navy, Black)" }, { k: "targetPrice", l: "Target FOB ($)", t: "number" },
     { k: "targetQty", l: "Projected quantity (pcs)", t: "number" },
     { k: "notes", l: "Development notes / buyer comments", t: "textarea", full: 1 },
@@ -65,7 +65,7 @@ function devView(id) {
     body: `<div class="steps">${DEV_FLOW.map((s, i) => `<div class="stp${step > i || d.status === "Approved" ? " done" : step === i ? " cur" : ""}"><i>${step > i || d.status === "Approved" ? "✓" : i + 1}</i><span>${esc(s)}</span><small>${d.hist && d.hist[s] ? fmtD(d.hist[s]) : ""}</small></div>`).join("")}</div>
       ${["On hold", "Dropped"].includes(d.status) ? `<p class="note wn">This style is ${esc(d.status.toLowerCase())}.</p>` : ""}
       <div class="vg"><div>
-        <h3 class="sub3">Style details</h3>${kv([["Buyer", d.buyer], ["Season", d.season], ["Category", d.category], ["Factory", d.factory], ["Merchandiser", d.merch], ["Main fabric", d.fabric], ["Colourways", d.colours], ["Target FOB", d.targetPrice ? price(d.targetPrice) : ""], ["Projected quantity", d.targetQty ? num(d.targetQty) + " pcs" : ""], ["Target approval", d.due ? `${fmtD(d.due)} (${relDays(dd)})` : ""]])}
+        <h3 class="sub3">Style details</h3>${kv([["Buyer", d.buyer], ["Season", d.season], ["Category", d.category], ["Factory", d.factory], ["Merchandiser", Team.name(d.merch) || d.merch], ["Main fabric", d.fabric], ["Colourways", d.colours], ["Target FOB", d.targetPrice ? price(d.targetPrice) : ""], ["Projected quantity", d.targetQty ? num(d.targetQty) + " pcs" : ""], ["Target approval", d.due ? `${fmtD(d.due)} (${relDays(dd)})` : ""]])}
         <h3 class="sub3">Tech pack <span class="chip c-${tp && tp.status === "Final" ? "ok" : "w"}">${esc(d.tpVersion || "v1")} · ${esc(d.tpStatus || "Draft")}</span> <span class="chip c-${secReady === SECTIONS.length ? "ok" : "w"}">${secReady}/${SECTIONS.length}</span></h3>
         ${CK("", SECTIONS.map(([k, l]) => ({ label: l, note: d["s_" + k] || "Missing", s: d["s_" + k] ? "ok" : "no", act: { act: "devEdit", id: d.id } })), { bare: true })}
         ${d.sketch ? `<h3 class="sub3">Sketch</h3><div class="skl"><img src="${esc(d.sketch)}" alt="${esc(d.id)} sketch"></div>` : ""}
@@ -92,6 +92,7 @@ Actions.devNext = el => {
   const d = Store.get("devs", el.dataset.id), i = devStep(d);
   if (i < 0 || i >= DEV_FLOW.length - 1) return;
   d.status = DEV_FLOW[i + 1]; d.hist = d.hist || {}; d.hist[d.status] = iso(TODAY);
+  logWork(`Moved style ${d.id} to ${d.status}`);
   Store.save(); App.render(); devView(d.id); toast(`${d.id} moved to ${d.status}`);
 };
 Actions.devCost = el => { const d = Store.get("devs", el.dataset.id); Crud.create("costings", { style: d.id, buyer: d.buyer, status: "Draft" }); };
@@ -108,7 +109,7 @@ Pages.add({
     const rows = list.map(d => {
       const si = devStep(d), cs = Store.all("costings").find(c => c.style === d.id);
       return [d.id, d.buyer, d.season, d.category, d.product, d.factory, d.status, d.status === "Approved" ? 100 : si < 0 ? 0 : pct(si, DEV_FLOW.length - 1),
-        d.due ? fmtL(d.due) : "", devLate(d) ? "Yes" : "", d.merch, d.fabric, d.colours,
+        d.due ? fmtL(d.due) : "", devLate(d) ? "Yes" : "", Team.name(d.merch) || d.merch, d.fabric, d.colours,
         n(d.targetPrice), cs ? +Logic.fob(cs).toFixed(2) : "", n(d.targetQty), d.notes];
     });
     const note = [UI.pick.dvb && UI.pick.dvb !== "all" ? UI.pick.dvb : "", UI.pick.dvs && UI.pick.dvs !== "all" ? UI.pick.dvs : "", stf !== "all" ? (stf === "late" ? "Overdue" : stf) : "", UI.sq.pd ? `search “${UI.sq.pd}”` : ""].filter(Boolean).join(", ");

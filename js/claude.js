@@ -57,7 +57,7 @@ You cannot change data in the app. When something needs editing, tell the user w
       today: iso(TODAY),
       orders: D.orders.map(o => {
         const i = Logic.info(o), r = Logic.review(o), s = i.closed ? null : i.stage;
-        return { po: o.id, buyer: o.buyer, style: o.style, product: o.product, qty: n(o.qty), unitPrice: n(o.price), delivery: o.delivery,
+        return { po: o.id, buyer: o.buyer, merchandiser: Team.name(Team.ofOrder(o)) || "not assigned", style: o.style, product: o.product, qty: n(o.qty), unitPrice: n(o.price), delivery: o.delivery,
           contractDelivery: o.contractDelivery, contractPrice: n(o.contractPrice), payment: o.payment, lc: o.lc,
           stage: i.closed ? "Closed" : STAGES[s].name, filesDone: i.pct + "%", poReview: r.chip,
           openFilesThisStage: s === null ? [] : STAGES[s].docs.filter((_, j) => !isDone(o.docs[s][j])),
@@ -80,6 +80,8 @@ You cannot change data in the app. When something needs editing, tell the user w
       inspections: D.inspections.map(i => ({ po: i.order, type: i.type, date: i.date, inspector: i.inspector, aql: i.aql, defects: i.defects === "" ? undefined : n(i.defects), result: Logic.inspResult(i), cap: i.capStatus || undefined, capDue: i.capDue })),
       shipments: D.shipments.map(s => { const o = Store.get("orders", s.order), c = o ? Logic.docCount(o, 8) : null; return { po: s.order, mode: s.mode, forwarder: s.forwarder, shipDate: s.shipDate, eta: s.eta, documentsReady: c ? `${c.done} of ${c.total}` : undefined, missingDocuments: o ? STAGES[8].docs.filter((_, j) => !isDone(o.docs[8][j])) : undefined }; }),
       payments: D.payments.map(p => ({ po: p.order, invoice: p.invoice, amount: n(p.amount), paid: n(p.paid), due: p.due, status: Logic.payStatus(p) })),
+      team: Team.all().map(m => ({ name: m.name, role: m.role, status: m.status || "Active", buyers: Store.all("buyers").filter(b => b.merch === m.id).map(b => b.name) })),
+      recentWork: (Store.all("activity") || []).slice(0, 25).map(a => `${Team.name(a.by) || "Someone"}: ${a.text}${a.order ? " (" + a.order + ")" : ""}, ${a.at.slice(0, 16).replace("T", " ")}`),
       alerts: Logic.alerts().slice(0, 30).map(a => `${a.order}: ${a.text} (${a.stage})`)
     });
   },

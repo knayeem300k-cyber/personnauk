@@ -101,8 +101,28 @@ function seedData() {
     V("PEP-AW" + (y + 1) + "-201", "PEPCO", "AW" + (y + 1), "Sweater", "Cable knit jumper", "", "Brief received", 60, "Merchandising team A", "Acrylic wool blend", "", 6.8, 25000, "Waiting for gauge and yarn confirmation.", -2),
     V("NW-SS" + (y + 1) + "-330", "Northwind Apparel", "SS" + (y + 1), "Woven", "Linen shirt", "Woven unit", "On hold", 20, "Merchandising team A", "100% linen", "White, Sky", 7.1, 8000, "Buyer paused the style until range review.", -25)
   ];
+  /* Merchandising team, who looks after each buyer, and some recent work */
+  const team = [
+    { id: "m1", name: "Nusrat Jahan", role: "Senior merchandiser", email: "nusrat@factory.example", phone: "+880 1711 000001", status: "Active" },
+    { id: "m2", name: "Tanvir Ahmed", role: "Merchandiser", email: "tanvir@factory.example", phone: "+880 1711 000002", status: "Active" },
+    { id: "m3", name: "Farhana Akter", role: "Merchandiser", email: "farhana@factory.example", phone: "+880 1711 000003", status: "Active" },
+    { id: "m4", name: "Imran Hossain", role: "Assistant merchandiser", email: "imran@factory.example", phone: "+880 1711 000004", status: "Active" }
+  ];
+  const bm = { "Northwind Apparel": "m1", "Harbor and Pine": "m2", "Alder Co.": "m3", "Kestrel Wear": "m2", PEPCO: "m1", Pernambucanas: "m3", Lidl: "m4" };
+  buyers.forEach(b => { b.merch = bm[b.name] || ""; });
+  orders.forEach(o => { o.merch = o.id === "88140" ? "m4" : bm[o.buyer] || ""; });
+  devs.forEach(d => { d.merch = d.merch === "Merchandising team B" ? "m2" : bm[d.buyer] || "m1"; });
+  const at = h => new Date(Date.now() - h * 3600e3).toISOString();
+  const activity = [
+    [1, "m2", "Added sample 88190 Salesman", "88190"], [2, "m1", "Lab dip approval: in progress", "88217"], [3, "m3", "Updated costing sheet AL-0907", ""],
+    [5, "m1", "Updated order 88217", "88217"], [7, "m4", "Updated sample 88140 Proto", "88140"], [26, "m2", "Booking confirmation: done", "88071"],
+    [30, "m4", "Added inquiry INQ-314", ""], [50, "m1", `Moved style AW${y + 1}BG105-SL to Pattern`, ""], [70, "m3", "Updated payment INV-87990", "87990"],
+    [96, "m2", "Packing list: done", "88071"], [120, "m1", "Added order 88217", "88217"], [140, "m3", "Commercial invoice: done", "88104"]
+  ].map(([h, by, text, order], i) => ({ id: "a" + i, at: at(h), by, text, order }));
   return {
     v: 1,
+    team,
+    activity,
     buyers,
     devs,
     orders,
@@ -194,7 +214,7 @@ function seedData() {
 const Store = {
   key: "merchandiser-data-v1",
   d: null,
-  cols: ["buyers", "devs", "orders", "inquiries", "styles", "costings", "samples", "bookings", "lines", "inspections", "shipments", "payments"],
+  cols: ["team", "activity", "buyers", "devs", "orders", "inquiries", "styles", "costings", "samples", "bookings", "lines", "inspections", "shipments", "payments"],
   load() {
     let d = null;
     try { d = JSON.parse(localStorage.getItem(this.key)); } catch (e) { /* storage blocked or empty */ }
@@ -205,6 +225,14 @@ const Store = {
   fix() {
     if (!Array.isArray(this.d.buyers)) this.d.buyers = seedData().buyers;
     if (!Array.isArray(this.d.devs)) this.d.devs = seedData().devs;
+    if (!Array.isArray(this.d.team)) {
+      const seed = seedData(), ids = new Set(seed.team.map(m => m.id));
+      this.d.team = seed.team;
+      this.d.buyers.forEach(b => { if (b.merch === undefined) b.merch = (seed.buyers.find(x => x.name === b.name) || {}).merch || ""; });
+      (this.d.orders || []).forEach(o => { if (o.merch === undefined) o.merch = (seed.orders.find(x => x.id === o.id) || {}).merch || (this.d.buyers.find(b => b.name === o.buyer) || {}).merch || ""; });
+      this.d.devs.forEach(d => { if (!ids.has(d.merch)) d.merch = d.merch === "Merchandising team B" ? "m2" : (this.d.buyers.find(b => b.name === d.buyer) || {}).merch || ""; });
+      if (!Array.isArray(this.d.activity)) this.d.activity = seed.activity;
+    }
     if (!this.d.tpMerged) {
       const map = { Final: "Approved", Review: "Fit sample", Draft: "Design" };
       (this.d.styles || []).forEach(s => {
