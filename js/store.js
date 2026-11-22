@@ -205,6 +205,18 @@ const Store = {
   fix() {
     if (!Array.isArray(this.d.buyers)) this.d.buyers = seedData().buyers;
     if (!Array.isArray(this.d.devs)) this.d.devs = seedData().devs;
+    if (!this.d.tpMerged) {
+      const map = { Final: "Approved", Review: "Fit sample", Draft: "Design" };
+      (this.d.styles || []).forEach(s => {
+        let d = this.d.devs.find(x => x.id === s.id);
+        if (!d) { d = { id: s.id, buyer: s.buyer, season: "", category: "", product: s.name || s.id, factory: "", status: map[s.status] || "Design", due: "", hist: {}, created: s.updated || iso(TODAY) }; this.d.devs.push(d); }
+        if (!d.tpVersion) d.tpVersion = s.version || "v1";
+        if (!d.tpStatus) d.tpStatus = s.status || "Draft";
+        SECTIONS.forEach(([k]) => { if (!d["s_" + k] && s["s_" + k]) d["s_" + k] = s["s_" + k]; });
+      });
+      this.d.devs.forEach(d => { if (!d.s_fabric && d.fabric) d.s_fabric = d.fabric; if (d.s_fabric) d.fabric = d.s_fabric; });
+      this.d.tpMerged = true;
+    }
     if (!this.d.bomReady) {
       const seed = seedData().costings;
       (this.d.costings || []).forEach(c => { const s = seed.find(x => x.id === c.id && x.style === c.style); if (s && s.bom && !Array.isArray(c.bom)) c.bom = s.bom; });

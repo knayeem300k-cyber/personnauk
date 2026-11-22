@@ -111,7 +111,7 @@ Actions.btech = el => {
 Actions.bsearch = el => { UI.sq[el.dataset.k] = el.value; App.filter(); };
 
 Pages.add({
-  id: "buyers", title: "Buyer Management", sub: "Buyer directory, commercial profile, contacts and buyer-specific working procedures",
+  id: "buyers", title: "Buyer Management", sub: "Buyer directory, commercial profile, contacts and buyer-specific working procedures", filter: false,
   newLabel: "Add new buyer",
   export() {
     const st = UI.pick.bst || "all";

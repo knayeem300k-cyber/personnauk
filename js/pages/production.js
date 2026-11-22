@@ -21,9 +21,6 @@ Pages.add({
     const ords = [...new Set(day.map(l => l.order))];
     const behind = ords.filter(id => day.some(l => l.order === id && Logic.lineStatus(l) === "Behind"));
     const act = Logic.active();
-    const tools = Pick("prod", act.map(o => [o.id, `${o.id} · ${o.buyer}`]), ords[0]);
-    const o = Store.get("orders", UI.pick.prod);
-    const bk = o ? Store.all("bookings").filter(b => b.order === o.id) : [];
     const prog = act.map(x => [x, sum(L.filter(l => l.order === x.id && !/cut/i.test(l.line)), l => l.actual)]).filter(x => x[1] > 0);
 
     return KP([
@@ -35,9 +32,6 @@ Pages.add({
         day.map(l => { const d = Logic.dhu(l); return { cells: [l.line, l.order, num(l.target), num(l.actual), pct(l.actual, l.target) + "%", d === null ? "–" : d.toFixed(1) + "%", st(Logic.lineStatus(l))], act: { act: "edit", col: "lines", id: l.id } }; }),
         { empty: "No production entered yet. Click New to add a line report." })
     }<div class="stack">${
-      CK(o ? `Material in house, ${o.id}` : "Material in house", bk.map(b => ({ label: b.item, note: b.status + (b.due ? `, due ${fmtD(b.due)}` : ""), s: b.status === "In house" ? "ok" : ["Failed", "Pending"].includes(b.status) ? "no" : "wt", act: { act: "edit", col: "bookings", id: b.id } })),
-        { tools, empty: "No bookings for this order. Add them under Pre-production." })
-    }${
       BR("Sewing progress", prog.map(([x, s]) => [x.id, pct(s, x.qty), `${pct(s, x.qty)}%`]), { empty: "No sewing output yet." })
     }</div></div>`;
   }

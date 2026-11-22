@@ -28,15 +28,27 @@ Schemas.devs = {
     { k: "product", l: "Product description", req: 1 }, { k: "factory", l: "Factory" },
     { k: "status", l: "Development status", t: "select", o: DEV_ST },
     { k: "due", l: "Target approval date", t: "date", d: addDays(iso(TODAY), 45) },
-    { k: "merch", l: "Merchandiser" }, { k: "fabric", l: "Main fabric" },
+    { k: "merch", l: "Merchandiser" },
     { k: "colours", l: "Colourways (e.g. Navy, Black)" }, { k: "targetPrice", l: "Target FOB ($)", t: "number" },
     { k: "targetQty", l: "Projected quantity (pcs)", t: "number" },
-    { k: "notes", l: "Development notes / buyer comments", t: "textarea", full: 1 }
+    { k: "notes", l: "Development notes / buyer comments", t: "textarea", full: 1 },
+    { k: "tpVersion", l: "Tech pack version", d: "v1" }, { k: "tpStatus", l: "Tech pack status", t: "select", o: ["Draft", "Review", "Final"] },
+    ...SECTIONS.map(([k, l]) => ({ k: "s_" + k, l: "Tech pack: " + l }))
   ],
   validate: (v, r) => !r && Store.get("devs", v.id.trim().toUpperCase()) ? "This style number already exists." : "",
   make: v => ({ ...v, id: v.id.trim().toUpperCase(), created: iso(TODAY), hist: {} }),
-  after: r => { if (!r.hist) r.hist = {}; if (!r.hist[r.status]) r.hist[r.status] = iso(TODAY); }
+  after: r => { if (!r.hist) r.hist = {}; if (!r.hist[r.status]) r.hist[r.status] = iso(TODAY); devToTechPack(r); },
+  removed: r => { Store.remove("styles", r.id); }
 };
+
+/* The tech pack is part of the style. Keep a copy in "styles", which orders, AI and Claude read. */
+function devToTechPack(d) {
+  let t = Store.get("styles", d.id);
+  if (!t) { t = { id: d.id }; Store.d.styles.push(t); }
+  Object.assign(t, { name: d.product, buyer: d.buyer, version: d.tpVersion || "v1", status: d.tpStatus || "Draft", updated: iso(TODAY) });
+  SECTIONS.forEach(([k]) => { t["s_" + k] = d["s_" + k] || ""; });
+  d.fabric = d.s_fabric || "";
+}
 
 /* Popup with everything about one style */
 function devView(id) {
@@ -44,7 +56,7 @@ function devView(id) {
   if (!d) return;
   const step = devStep(d), tp = Store.get("styles", d.id), cs = Store.all("costings").find(c => c.style === d.id);
   const samples = Store.all("samples").filter(s => s.style === d.id), orders = Store.all("orders").filter(o => o.style === d.id);
-  const dd = daysFrom(d.due);
+  const dd = daysFrom(d.due), secReady = SECTIONS.filter(([k]) => d["s_" + k]).length;
   const kv = rows => `<div class="res bp">${rows.map(([k, v]) => `<span>${esc(k)}</span><b>${esc(v || "–")}</b>`).join("")}</div>`;
   const link = (label, val, btn) => `<div class="f"><i class="${btn ? "no" : "ok"}">${btn ? "–" : "✓"}</i><b>${esc(label)}<small class="blk">${esc(val)}</small></b>${btn || ""}</div>`;
   View.open({
@@ -54,10 +66,12 @@ function devView(id) {
       ${["On hold", "Dropped"].includes(d.status) ? `<p class="note wn">This style is ${esc(d.status.toLowerCase())}.</p>` : ""}
       <div class="vg"><div>
         <h3 class="sub3">Style details</h3>${kv([["Buyer", d.buyer], ["Season", d.season], ["Category", d.category], ["Factory", d.factory], ["Merchandiser", d.merch], ["Main fabric", d.fabric], ["Colourways", d.colours], ["Target FOB", d.targetPrice ? price(d.targetPrice) : ""], ["Projected quantity", d.targetQty ? num(d.targetQty) + " pcs" : ""], ["Target approval", d.due ? `${fmtD(d.due)} (${relDays(dd)})` : ""]])}
+        <h3 class="sub3">Tech pack <span class="chip c-${tp && tp.status === "Final" ? "ok" : "w"}">${esc(d.tpVersion || "v1")} · ${esc(d.tpStatus || "Draft")}</span> <span class="chip c-${secReady === SECTIONS.length ? "ok" : "w"}">${secReady}/${SECTIONS.length}</span></h3>
+        ${CK("", SECTIONS.map(([k, l]) => ({ label: l, note: d["s_" + k] || "Missing", s: d["s_" + k] ? "ok" : "no", act: { act: "devEdit", id: d.id } })), { bare: true })}
         ${d.sketch ? `<h3 class="sub3">Sketch</h3><div class="skl"><img src="${esc(d.sketch)}" alt="${esc(d.id)} sketch"></div>` : ""}
       </div><div>
         <h3 class="sub3">Linked records</h3><div class="fl">
-          ${link("Tech pack", tp ? `${tp.version}, ${tp.status}, ${Logic.secDone(tp)} of ${SECTIONS.length} sections` : "Not created yet", tp ? "" : `<button type="button" class="btn sm g" data-act="devTp" data-id="${esc(d.id)}">Create</button>`)}
+          ${d.inquiry ? link("Inquiry", `${d.inquiry}${(Store.get("inquiries", d.inquiry) || {}).status ? ", " + Store.get("inquiries", d.inquiry).status : ""}`, "") : ""}
           ${link("Costing sheet", cs ? `FOB ${price(Logic.fob(cs))}, ${cs.status}${d.targetPrice ? `, target ${price(d.targetPrice)}` : ""}` : "Not created yet", cs ? "" : `<button type="button" class="btn sm g" data-act="devCost" data-id="${esc(d.id)}">Create</button>`)}
           ${link("Samples", samples.length ? samples.map(s => `${s.type} (${Logic.sampleStatus(s)})`).join(", ") : "No samples yet", samples.length ? "" : " ")}
           ${link("Orders", orders.length ? orders.map(o => `${o.id}, ${num(o.qty)} pcs`).join("; ") : "No orders yet", orders.length ? "" : " ")}
@@ -80,7 +94,6 @@ Actions.devNext = el => {
   d.status = DEV_FLOW[i + 1]; d.hist = d.hist || {}; d.hist[d.status] = iso(TODAY);
   Store.save(); App.render(); devView(d.id); toast(`${d.id} moved to ${d.status}`);
 };
-Actions.devTp = el => { const d = Store.get("devs", el.dataset.id); Crud.create("styles", { id: d.id, name: d.product, buyer: d.buyer }); };
 Actions.devCost = el => { const d = Store.get("devs", el.dataset.id); Crud.create("costings", { style: d.id, buyer: d.buyer, status: "Draft" }); };
 Actions.devStage = el => { UI.dvst = el.dataset.v; App.render(); };
 

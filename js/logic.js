@@ -148,6 +148,8 @@ const Logic = {
      It only moves a file forward (missing → in progress → done), never back. */
   sync() {
     const D = Store.d;
+    /* A costing sheet with a BOM takes its fabric and trims cost from the BOM */
+    if (typeof bomTotals === "function") D.costings.forEach(c => { const t = bomTotals(c); if (t.lines) { c.fabric = +t.fabric.toFixed(2); c.trims = +t.trims.toFixed(2); } });
     const up = (o, s, i, v) => {
       const c = o.docs[s][i];
       if (v === "ok") { if (!isDone(c)) o.docs[s][i] = "ok"; }

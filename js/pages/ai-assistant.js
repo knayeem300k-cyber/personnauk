@@ -118,13 +118,13 @@ const AIE = {
 
   style(code, fromFile) {
     const s = code && Store.get("styles", code);
-    if (!s) return `<p>I could not find a tech pack for <b>${esc(code || "that style")}</b> in the style library.</p>` + this.btn([{ l: "Open style library", a: { act: "open", href: "#techpack" } }]);
+    if (!s) return `<p>I could not find a tech pack for <b>${esc(code || "that style")}</b> in Product Development.</p>` + this.btn([{ l: "Open Product Development", a: { act: "open", href: "#pd" } }]);
     const miss = SECTIONS.filter(([k]) => !s["s_" + k]);
     return (fromFile ? `<p>This offline assistant cannot read the text inside the file, so the details below come from your style library. Check them against the file.</p>` : "")
       + `<p>Tech pack <b>${esc(s.id)}</b> (${esc(s.name)}, ${esc(s.buyer)}), version ${esc(s.version)}, status ${esc(s.status)}:</p>`
       + this.kv(SECTIONS.filter(([k]) => s["s_" + k]).map(([k, l]) => [l, s["s_" + k]]))
       + (miss.length ? `<p class="wn">Missing: ${miss.map(m => esc(m[1].toLowerCase())).join(", ")}.</p>` : `<p class="gd">All ${SECTIONS.length} sections are complete.</p>`)
-      + this.btn([{ l: "Edit tech pack", a: { act: "edit", col: "styles", id: s.id } }, { l: "Open style library", a: { act: "open", href: "#techpack", k: "tp", v: s.id } }]);
+      + this.btn(Store.get("devs", s.id) ? [{ l: "Open style", a: { act: "devView", id: s.id } }, { l: "Edit style and tech pack", a: { act: "devEdit", id: s.id } }] : [{ l: "Open Product Development", a: { act: "open", href: "#pd" } }]);
   },
 
   file(name) {
@@ -203,11 +203,11 @@ const AIE = {
     const hit = obj => words.some(w => Object.values(obj).some(v => typeof v !== "object" && String(v).toLowerCase().includes(w)));
     const found = [
       ...Store.all("orders").filter(hit).map(o => ({ l: `Order ${o.id}, ${o.buyer}, ${o.style}`, h: "#order/" + o.id })),
-      ...Store.all("styles").filter(hit).map(s => ({ l: `Tech pack ${s.id} ${s.name}`, h: "#techpack", k: "tp", v: s.id })),
+      ...Store.all("devs").filter(hit).map(d => ({ l: `Style ${d.id} ${d.product}`, a: { act: "devView", id: d.id } })),
       ...Store.all("inquiries").filter(hit).map(i => ({ l: `Inquiry ${i.id}, ${i.buyer}`, h: "#inquiry", k: "inq", v: i.id }))
     ].slice(0, 6);
     if (!found.length) return `<p>I am not sure what you mean. ${this.help().slice(3)}`;
-    return `<p>Here is what I found:</p>` + this.btn(found.map(f => ({ l: f.l, a: { act: "open", href: f.h, ...(f.k ? { k: f.k, v: f.v } : {}) } })));
+    return `<p>Here is what I found:</p>` + this.btn(found.map(f => ({ l: f.l, a: f.a || { act: "open", href: f.h, ...(f.k ? { k: f.k, v: f.v } : {}) } })));
   }
 };
 
@@ -287,7 +287,6 @@ Pages.add({
 <div class="cv">${log}<div class="cvf">${badge}<button class="nw" data-act="aiNew">Start a new chat</button></div></div></div>
 <div class="chp${pop}"><button data-act="aiChip" data-q="tp">Read tech pack ${aiI("d")}</button><button data-act="aiChip" data-q="po">Check a PO ${aiI("k")}</button><button data-act="aiChip" data-q="email">Draft an email ${aiI("e")}</button></div>
 <div class="bx neon${pop}"><div class="q">${aiI("s")}<textarea id="aiIn" rows="1" placeholder="Ask anything about your orders…" aria-label="Message"></textarea></div><div class="tl"><button data-act="aiAttach">${aiI("c")}Attach</button><i></i><button data-act="aiAsk" data-q="help">${aiI("l")}What can I ask?</button><i></i><button data-act="aiAsk" data-q="What needs attention today?">${aiI("g")}Today</button><span class="rt"><button class="r" data-act="aiVoice" aria-label="Voice">${aiI("m")}</button><button class="r go" data-act="aiSend" aria-label="Send">${aiI("u")}</button></span></div></div>
-<input type="file" id="aiFile" data-act="aiFile" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.txt,.csv,.md" hidden>
-<div class="cds${pop}"><div class="cd" role="button" tabindex="0" data-act="aiChip" data-q="tp"><div class="t"><span>${aiI("d")}</span>Tech Pack Reader<em>Read file</em></div><p>Match a tech pack file to its style and show the fabric, sizes, trims and missing sections.</p></div><div class="cd" role="button" tabindex="0" data-act="aiChip" data-q="po"><div class="t"><span>${aiI("k")}</span>PO Review<em>Check PO</em></div><p>Compare a PO with the contract and costing and flag date or price differences.</p></div><div class="cd" role="button" tabindex="0" data-act="aiChip" data-q="email"><div class="t"><span>${aiI("e")}</span>Email Drafts<em>Write email</em></div><p>Reply to buyers in a clear, polite tone, based on the real issues on the order.</p></div></div></div>`;
+<input type="file" id="aiFile" data-act="aiFile" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.txt,.csv,.md" hidden></div>`;
   }
 });

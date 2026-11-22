@@ -16,7 +16,7 @@ Schemas.costings = {
   name: "Costing sheet", label: r => r.style,
   fields: r => [
     { k: "style", l: "Style code", req: 1 }, buyerField(r, "Buyer", 0),
-    { k: "fabric", l: "Fabric ($ per piece)", t: "number", req: 1 }, { k: "trims", l: "Trims ($ per piece)", t: "number", d: 0 },
+    { k: "fabric", l: "Fabric ($ per piece, from BOM when it has lines)", t: "number" }, { k: "trims", l: "Trims ($ per piece, from BOM when it has lines)", t: "number", d: 0 },
     { k: "cm", l: "CM, cost of making ($)", t: "number", d: 0 }, { k: "wastage", l: "Wastage ($)", t: "number", d: 0 },
     { k: "commercial", l: "Commercial cost ($)", t: "number", d: 0 }, { k: "profit", l: "Profit ($)", t: "number", d: 0 },
     { k: "status", l: "Status", t: "select", o: ["Draft", "Awaiting approval", "Approved"] },
@@ -24,6 +24,7 @@ Schemas.costings = {
       cols: [["item", "Material / item"], ["type", "Type (Fabric, Trims, Thread, Packing…)"], ["supplier", "Supplier"], ["unit", "Unit (kg, m, pcs)"],
         ["cons", "Consumption per piece", "number"], ["rate", "Price per unit ($)", "number"], ["waste", "Wastage %", "number"]] }
   ],
+  validate: v => !v.bom.length && v.fabric === "" ? "Add the fabric cost, or add materials to the BOM." : "",
   make: v => ({ ...v, style: v.style.toUpperCase() })
 };
 
@@ -42,14 +43,9 @@ Actions.calc = el => { UI.calc[el.dataset.k] = +el.value || 0; const r = documen
 Actions.calcApply = el => {
   const c = Store.get("costings", el.dataset.id);
   if (!c) return;
+  if (bomLines(c).length) return toast(`${c.style} takes fabric cost from its BOM. Update the fabric line in the BOM instead.`);
   c.fabric = +calcVals().cost.toFixed(2);
   Logic.sync(); App.render(); toast(`Fabric cost for ${c.style} set to ${price(c.fabric)}`);
-};
-Actions.bomApply = el => {
-  const c = Store.get("costings", el.dataset.id), t = bomTotals(c);
-  if (!t.lines) return;
-  c.fabric = +t.fabric.toFixed(2); c.trims = +t.trims.toFixed(2);
-  Logic.sync(); App.render(); toast(`${c.style}: fabric ${price(c.fabric)}, trims ${price(c.trims)} from BOM`);
 };
 
 Pages.add({
@@ -82,14 +78,12 @@ Pages.add({
     const parts = [["Fabric", "fabric"], ["Trims", "trims"], ["CM", "cm"], ["Wastage", "wastage"], ["Commercial", "commercial"], ["Profit", "profit"]];
     const f = (k, l) => `<label>${l}<input type="number" step="any" min="0" data-act="calc" data-k="${k}" value="${UI.calc[k]}"></label>`;
     const t = sel ? bomTotals(sel) : null;
-    const diff = t ? t.total - ((+sel.fabric || 0) + (+sel.trims || 0)) : 0;
 
     const bom = sel ? TB(`BOM for ${sel.style}`, ["Material / item", "Type", "Supplier", "Unit", "Consumption / pc", "Price / unit", "Wastage", "Cost / pc"],
       bomLines(sel).map(l => ({ cells: [l.item || "–", l.type || "–", l.supplier || "–", l.unit || "–", l.cons || "–", l.rate ? rate(l.rate) : "–", l.waste ? l.waste + "%" : "–", { html: `<b>${price(bomAmt(l))}</b>` }], act: { act: "edit", col: "costings", id: sel.id } })),
       { tools, empty: "No materials yet. Click Edit costing and BOM to add them." })
-      .replace(/<\/section>$/, `<div class="res bomt"><span>Fabric</span><b>${price(t.fabric)}</b><span>Trims and others</span><b>${price(t.trims)}</b><span>BOM total per piece</span><b>${price(t.total)}</b><span>Costing sheet (fabric + trims)</span><b>${price((+sel.fabric || 0) + (+sel.trims || 0))}</b></div>
-        ${t.lines && Math.abs(diff) >= 0.01 ? `<p class="note ${diff > 0 ? "wn" : "mute"}">BOM is ${price(Math.abs(diff))} ${diff > 0 ? "higher" : "lower"} than the fabric and trims on the costing sheet.</p>` : ""}
-        <div class="card-foot"><button class="btn sm" data-act="edit" data-col="costings" data-id="${esc(sel.id)}">Edit costing and BOM</button>${t.lines ? `<button class="btn sm g" data-act="bomApply" data-id="${esc(sel.id)}">Use BOM totals in costing</button>` : ""}</div></section>`)
+      .replace(/<\/section>$/, `<div class="res bomt"><span>Fabric</span><b>${price(t.fabric)}</b><span>Trims and others</span><b>${price(t.trims)}</b><span>BOM total per piece</span><b>${price(t.total)}</b></div>${t.lines ? `<p class="note mute">Fabric and trims on the costing sheet come from this BOM automatically.</p>` : ""}
+        <div class="card-foot"><button class="btn sm" data-act="edit" data-col="costings" data-id="${esc(sel.id)}">Edit costing and BOM</button></div></section>`)
       : "";
 
     return KP([
