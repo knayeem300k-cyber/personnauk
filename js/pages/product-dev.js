@@ -92,7 +92,7 @@ Actions.devNext = el => {
   const d = Store.get("devs", el.dataset.id), i = devStep(d);
   if (i < 0 || i >= DEV_FLOW.length - 1) return;
   d.status = DEV_FLOW[i + 1]; d.hist = d.hist || {}; d.hist[d.status] = iso(TODAY);
-  logWork(`Moved style ${d.id} to ${d.status}`);
+  logWork(`Moved style ${d.id} to ${d.status}`, "", d.merch);
   Store.save(); App.render(); devView(d.id); toast(`${d.id} moved to ${d.status}`);
 };
 Actions.devCost = el => { const d = Store.get("devs", el.dataset.id); Crud.create("costings", { style: d.id, buyer: d.buyer, status: "Draft" }); };

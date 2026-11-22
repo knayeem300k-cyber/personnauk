@@ -11,7 +11,6 @@ const App = {
       a.href = "#" + p.id; a.textContent = p.title; a.dataset.id = p.id;
       nav.appendChild(a);
     });
-    nav.querySelector(".brand").insertAdjacentHTML("afterend", `<label class="who"><span>Working as</span><select id="whoSel" data-act="setUser" aria-label="Working as"></select></label>`);
     nav.insertAdjacentHTML("beforeend", `<div class="foot"><button data-act="exportData">Export backup</button><button data-act="importData">Import backup</button><button data-act="resetData">Reset demo data</button><input type="file" id="importFile" data-act="importFile" accept=".json,application/json" hidden></div>`);
     this.wire();
     addEventListener("hashchange", () => this.render());
@@ -35,8 +34,6 @@ const App = {
     document.getElementById("view").innerHTML = `<header class="top"><div><h1>${esc(val(p.title))}</h1><p>${esc(val(p.sub))}</p></div>${btns}</header>`
       + (UI.filter ? `<div class="card sb"><input type="search" id="q" data-act="search" placeholder="Search rows on this page…" value="${esc(UI.q)}" aria-label="Search"></div>` : "")
       + body;
-    const who = document.getElementById("whoSel"), me = Team.me();
-    if (who) who.innerHTML = Team.active().map(m => `<option value="${esc(m.id)}"${m.id === me ? " selected" : ""}>${esc(m.name)}</option>`).join("") || '<option value="">No team yet</option>';
     const navId = p.navId || p.id;
     document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("on", a.dataset.id === navId));
     this.filter();

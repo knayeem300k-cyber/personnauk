@@ -210,7 +210,7 @@ const Crud = {
         const r = Store.add(col, S.make ? S.make(v) : v);
         if (then) then(r);
         if (S.after) S.after(r, true);
-        logWork(`Added ${S.name.toLowerCase()} ${S.label ? S.label(r) : ""}`.trim(), col === "orders" ? r.id : r.order);
+        logWork(`Added ${S.name.toLowerCase()} ${S.label ? S.label(r) : ""}`.trim(), col === "orders" ? r.id : r.order, col === "devs" || col === "buyers" ? r.merch : "");
         Logic.sync();
       }
     });
@@ -224,10 +224,10 @@ const Crud = {
         const e = S.validate && S.validate(v, r); if (e) return e;
         Store.update(col, id, v);
         if (S.after) S.after(r, false);
-        logWork(`Updated ${S.name.toLowerCase()} ${S.label ? S.label(r) : ""}`.trim(), col === "orders" ? r.id : r.order);
+        logWork(`Updated ${S.name.toLowerCase()} ${S.label ? S.label(r) : ""}`.trim(), col === "orders" ? r.id : r.order, col === "devs" || col === "buyers" ? r.merch : "");
         Logic.sync();
       },
-      onDelete: () => { Store.remove(col, id); if (S.removed) S.removed(r); logWork(`Deleted ${S.name.toLowerCase()} ${S.label ? S.label(r) : ""}`.trim(), col === "orders" ? "" : r.order); Logic.sync(); },
+      onDelete: () => { Store.remove(col, id); if (S.removed) S.removed(r); logWork(`Deleted ${S.name.toLowerCase()} ${S.label ? S.label(r) : ""}`.trim(), col === "orders" ? "" : r.order, col === "orders" || col === "devs" || col === "buyers" ? r.merch : ""); Logic.sync(); },
       extra: S.extra ? S.extra(r) : []
     });
   }

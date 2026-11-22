@@ -42,7 +42,7 @@ function merchView(id) {
   });
   View.open({
     title: m.name,
-    head: `<div class="vh">${avatar(m, "lg")}<div><h2>${esc(m.name)}</h2><p class="mute">${esc(m.role || "Merchandiser")} <span class="chip c-${TONES[m.status || "Active"]}">${esc(m.status || "Active")}</span>${Team.me() === m.id ? ' <span class="chip c-p">You</span>' : ""}</p></div></div>`,
+    head: `<div class="vh">${avatar(m, "lg")}<div><h2>${esc(m.name)}</h2><p class="mute">${esc(m.role || "Merchandiser")} <span class="chip c-${TONES[m.status || "Active"]}">${esc(m.status || "Active")}</span></p></div></div>`,
     body: `<div class="vone">
       <h3 class="sub3">1. Contact</h3>${kv([["Email", m.email], ["Phone", m.phone], ["Buyers", s.buyers.join(", ")]])}
       <h3 class="sub3">2. Workload</h3>${kv([["Active orders", `${s.active.length} of ${s.orders.length}`], ["Quantity in hand", num(s.qty) + " pcs"], ["Order value in hand", money(s.value)], ["Profit margin", s.margin.pct === null ? "No costing yet" : s.margin.pct.toFixed(1) + "%"], ["Styles in development", `${s.devOpen.length}`], ["Overdue T&A tasks", `${s.lateTasks.length}`]])}
@@ -52,18 +52,16 @@ function merchView(id) {
       ${CK("", s.todo.slice(0, 12).map(a => ({ label: `${a.order}: ${a.text}`, note: a.stage, s: a.sev === 2 ? "no" : "wt", act: { act: "openOrder", id: a.order } })), { bare: true, empty: "Nothing pending. Well done." })}
       ${s.devOpen.length ? `<h3 class="sub3">5. Styles in development</h3>${CK("", s.devOpen.map(d => ({ label: `${d.id} · ${d.product}`, note: d.status + (d.due ? `, due ${fmtD(d.due)}` : ""), s: devLate(d) ? "no" : "wt", act: { act: "devViewFromTeam", id: d.id } })), { bare: true })}` : ""}
       <h3 class="sub3">${s.devOpen.length ? 6 : 5}. Recent work <span class="chip c-p">${s.week.length} this week</span></h3>
-      ${s.work.length ? `<div class="fl">${s.work.slice(0, 12).map(a => `<div class="f"><i class="ok">✓</i><b>${esc(a.text)}${a.order ? ` <small class="mute">· ${esc(a.order)}</small>` : ""}</b><small>${esc(ago(a.at))}</small></div>`).join("")}</div>` : `<p class="empty">No work recorded yet. Choose “Working as” in the sidebar to record work.</p>`}
+      ${s.work.length ? `<div class="fl">${s.work.slice(0, 12).map(a => `<div class="f"><i class="ok">✓</i><b>${esc(a.text)}${a.order ? ` <small class="mute">· ${esc(a.order)}</small>` : ""}</b><small>${esc(ago(a.at))}</small></div>`).join("")}</div>` : `<p class="empty">No work recorded yet. Work on this person's orders and styles shows up here.</p>`}
     </div>`,
     buttons: [
       { l: "Close", a: { act: "formClose" }, g: 1 },
-      ...(Team.me() === m.id ? [] : [{ l: `Work as ${m.name.split(" ")[0]}`, a: { act: "workAs", id: m.id }, g: 1 }]),
       { l: "Edit", a: { act: "merchEdit", id: m.id } }
     ]
   });
 }
 Actions.merchView = el => merchView(el.dataset.id);
 Actions.merchEdit = el => { const id = el.dataset.id; Crud.edit("team", id, () => merchView(id)); };
-Actions.workAs = el => { Team.setMe(el.dataset.id); App.render(); merchView(el.dataset.id); toast(`Working as ${Team.name(el.dataset.id)}`); };
 Actions.openOrder = el => { Form.close(); location.hash = "#order/" + el.dataset.id; };
 Actions.devViewFromTeam = el => { Form.close(); devView(el.dataset.id); };
 
@@ -93,7 +91,7 @@ Pages.add({
       ["Work done this week", weekAll, "Recorded actions"]
     ]) + TB("Team workload", ["Merchandiser", "Role", "Buyers", "Active orders", "Value in hand", "Styles in dev.", "Overdue", "To do", "This week", "Workload"],
       stats.map(({ m, s }) => ({
-        cells: [{ html: `<span class="bn">${avatar(m)}${esc(m.name)}${Team.me() === m.id ? ' <span class="chip c-p">You</span>' : ""}</span>` }, m.role || "–",
+        cells: [{ html: `<span class="bn">${avatar(m)}${esc(m.name)}</span>` }, m.role || "–",
           s.buyers.join(", ") || "–", s.active.length, money(s.value), s.devOpen.length,
           s.lateTasks.length ? chip(String(s.lateTasks.length), "b") : chip("0", "ok"), s.todo.length, s.week.length,
           { html: `<span class="mbar" title="${s.active.length} active orders"><i style="width:${pct(s.active.length, maxLoad)}%"></i></span>` }],
@@ -101,7 +99,7 @@ Pages.add({
       })),
       { empty: "No team members yet. Click + Add merchandiser.", tools: '<small class="mute">Click a merchandiser to see their orders and work</small>' })
       + `<div class="g2 even">${
-        Card("Recent work", work.length ? `<div class="fl">${work.map(a => { const m = Team.get(a.by); return `<div class="f">${avatar(m)}<b>${esc(a.text)}<small class="blk mute">${esc(m ? m.name : "Someone")}${a.order ? " · " + esc(a.order) : ""}</small></b><small>${esc(ago(a.at))}</small></div>`; }).join("")}</div>` : `<p class="empty">No work recorded yet.</p>`)
+        Card("Recent work", work.length ? `<div class="fl">${work.map(a => { const m = Team.get(a.by); return `<div class="f">${avatar(m)}<b>${esc(a.text)}<small class="blk mute">${esc(m ? m.name : "Team")}${a.order ? " · " + esc(a.order) : ""}</small></b><small>${esc(ago(a.at))}</small></div>`; }).join("")}</div>` : `<p class="empty">No work recorded yet.</p>`)
       }${
         CK("Orders without a merchandiser", unassigned.map(o => ({ label: `${o.id} · ${o.buyer}`, note: `${o.style}, delivery ${fmtD(o.delivery)}`, s: "wt", act: { act: "edit", col: "orders", id: o.id } })),
           { empty: "Every open order has a merchandiser.", foot: unassigned.length ? `<p class="note mute">Click an order to choose its merchandiser, or set a merchandiser on the buyer.</p>` : "" })

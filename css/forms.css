@@ -182,10 +182,6 @@ small.blk{display:block;text-align:left;margin-top:3px;font-weight:500;white-spa
 .vw:has(.vone){width:min(720px,100%)}
 .vone .sub3:first-child{margin-top:4px}
 
-/* "Working as" picker and team avatars */
-.side .who{display:flex;flex-direction:column;gap:5px;margin:0 6px 12px;padding:10px 12px;border-radius:14px;background:var(--bg);box-shadow:var(--in);font-size:11.5px;font-weight:600;color:var(--mute)}
-.side .who select{font:inherit;font-size:13px;font-weight:700;color:var(--ink);background:transparent;border:0;padding:0;cursor:pointer}
-.side .who select:focus-visible{outline:2px solid var(--ac);outline-offset:3px;border-radius:4px}
+/* Team avatars */
 .blogo.av{background:linear-gradient(135deg,#1fa971,#43d6a0)}
 .fl .f > .blogo.av{width:26px;height:26px;font-size:10px}
-@media(max-width:820px){.side .who{margin:0 8px 0 0;flex:none}}
