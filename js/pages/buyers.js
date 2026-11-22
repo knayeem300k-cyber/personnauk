@@ -28,17 +28,19 @@ function buyerView(id) {
   View.open({
     title: b.name,
     head: `<div class="vh">${buyerLogo(b, "lg")}<div><h2>${esc(b.name)}</h2><p class="mute">${esc(b.country || "Country not set")} · ${esc(b.currency || "–")} <span class="chip c-${TONES[b.status || "Active"]}">${esc(b.status || "Active")}</span></p></div></div>`,
-    body: `<div class="vg"><div>
-        <h3 class="sub3">Commercial</h3>${kv([["Currency", b.currency], ["Payment terms", b.payment], ["Incoterms", b.incoterm], ["Departments", bDepts(b).join(", ")], ["Buyer portal", b.portal], ["Working calendar", b.calendar]])}
-        <h3 class="sub3">Orders</h3>${kv([["Orders", `${os.length} (${open.length} open)`], ["Order quantity", num(sum(os, o => o.qty)) + " pcs"], ["Order value", money(sum(os, o => o.qty * o.price))], ["Styles", styles.join(", ")]])}
-      </div><div>
-        <h3 class="sub3">Contact persons <span class="chip c-p">${bContacts(b).length}</span></h3>${bContactsHtml(b)}
-        <h3 class="sub3">Profile <span class="chip c-${prof.every(p => p.ok) ? "ok" : "w"}">${prof.filter(p => p.ok).length}/${prof.length}</span> · Technical <span class="chip c-${tech.every(isDone) ? "ok" : "w"}">${tech.filter(isDone).length}/${BUYER_TECH.length}</span></h3>
+    body: `<div class="vone">
+        <h3 class="sub3">1. Buyer information</h3>${kv([["Buyer name", b.name], ["Country / market", b.country], ["Status", b.status || "Active"], ["Departments", bDepts(b).join(", ")], ["Buyer portal", b.portal], ["Working calendar", b.calendar]])}
+        <h3 class="sub3">2. Commercial</h3>${kv([["Currency", b.currency], ["Payment terms", b.payment], ["Incoterms", b.incoterm]])}
+        <h3 class="sub3">3. Orders</h3>${kv([["Orders", `${os.length} (${open.length} open)`], ["Order quantity", num(sum(os, o => o.qty)) + " pcs"], ["Order value", money(sum(os, o => o.qty * o.price))], ["Styles", styles.join(", ")]])}
+        <h3 class="sub3">4. Contact persons <span class="chip c-p">${bContacts(b).length}</span></h3>${bContactsHtml(b)}
+        <h3 class="sub3">5. Technical requirements <span class="chip c-${tech.length && tech.every(isDone) ? "ok" : "w"}">${tech.filter(isDone).length}/${BUYER_TECH.length}</span> · Profile <span class="chip c-${prof.every(p => p.ok) ? "ok" : "w"}">${prof.filter(p => p.ok).length}/${prof.length}</span></h3>
+        ${CK("", BUYER_TECH.map((l, j) => ({ label: l, note: LABEL[tech[j] || "no"], s: tech[j] || "no", act: { act: "btech", id: b.id, i: j } })), { bare: true })}
+        <p class="note mute">Click a technical item to change it: missing → in progress → done → not needed.</p>
+        <h3 class="sub3">6. Procedures and notes</h3>
         <div class="fl">${[["Sample, inspection and packing", b.procedures], ["Portal access", b.portalAccess], ["Buyer manual / compliance", b.manual]].map(([t, v]) => `<div class="f"><i class="${v ? "ok" : "no"}">${v ? "✓" : "–"}</i><b>${esc(t)}<small class="blk">${esc(v || "Not recorded yet")}</small></b></div>`).join("")}</div>
-      </div></div>`,
+      </div>`,
     buttons: [
       { l: "Close", a: { act: "formClose" }, g: 1 },
-      { l: "Open full profile", a: { act: "buyerProfileOpen", id: b.id }, g: 1 },
       { l: "New order", a: { act: "newOrderFor", b: b.name }, g: 1 },
       { l: "Edit buyer", a: { act: "buyerEdit", id: b.id } }
     ]
@@ -46,10 +48,6 @@ function buyerView(id) {
 }
 Actions.buyerView = el => buyerView(el.dataset.id);
 Actions.buyerEdit = el => { const id = el.dataset.id; Crud.edit("buyers", id, () => buyerView(id)); };
-Actions.buyerProfileOpen = el => {
-  Form.close(); UI.pick.buyer = el.dataset.id; App.render();
-  const c = document.querySelector('select[data-k="buyer"]'); if (c) c.closest(".card").scrollIntoView({ behavior: "smooth", block: "start" });
-};
 
 /* Profile completeness, worked out from what is filled in */
 const buyerProfile = b => [
@@ -108,6 +106,7 @@ Actions.btech = el => {
   const b = Store.get("buyers", el.dataset.id), j = +el.dataset.i;
   if (!Array.isArray(b.tech)) b.tech = BUYER_TECH.map(() => "no");
   b.tech[j] = NEXT[b.tech[j] || "no"]; Store.save(); App.render();
+  if (document.querySelector("#modal .vw")) buyerView(b.id);
 };
 Actions.bsearch = el => { UI.sq[el.dataset.k] = el.value; App.filter(); };
 
@@ -138,55 +137,14 @@ Pages.add({
   },
   onNew: () => Crud.create("buyers", { status: "Active", currency: "USD", incoterm: "FOB", contacts: [{}] }),
   render() {
-    const all = Store.all("buyers"), orders = Store.all("orders");
-    const active = all.filter(b => b.status !== "Inactive");
-    const known = new Set(all.map(b => b.name));
-    const linked = orders.filter(o => known.has(o.buyer));
-    const cur = [...new Set(all.map(b => b.currency).filter(Boolean))];
-
+    const all = Store.all("buyers");
     const stf = Pick("bst", [["all", "All statuses"], ["Active", "Active"], ["Inactive", "Inactive"]]);
     const shown = all.filter(b => UI.pick.bst === "all" || (b.status || "Active") === UI.pick.bst);
-    const tools = Pick("buyer", all.map(b => [b.id, b.name]), (active[0] || {}).id);
-    const sel = Store.get("buyers", UI.pick.buyer);
-
-    const summary = all.map(b => {
-      const os = orders.filter(o => o.buyer === b.name), open = os.filter(o => !Logic.info(o).closed);
-      const styles = [...new Set([...os.map(o => o.style), ...Store.all("styles").filter(s => s.buyer === b.name).map(s => s.id)])];
-      return { b, n: os.length, open: open.length, qty: sum(os, o => o.qty), value: sum(os, o => o.qty * o.price), styles };
-    }).sort((a, b) => b.qty - a.qty);
-
-    const prof = sel ? buyerProfile(sel) : [];
-    const profDone = prof.filter(p => p.ok).length;
-    const tech = sel ? (sel.tech || BUYER_TECH.map(() => "no")) : [];
-    const selSum = sel && summary.find(x => x.b === sel);
-
-    const directory = TB("Buyer directory", ["Buyer", "Country", "Currency", "Contact", "Email / phone", "Department", "Payment", "Incoterm", "Status"],
+    return TB("Buyer directory", ["Buyer", "Country", "Currency", "Contact", "Email / phone", "Department", "Payment", "Incoterm", "Status"],
       shown.map(b => { const cs = bContacts(b), m = cs[0] || {}; return { cells: [{ html: `<span class="bn">${buyerLogo(b)}${esc(b.name)}</span>` }, b.country, b.currency,
         { html: cs.length ? `${esc(m.name)}${m.role ? ", " + esc(m.role) : ""}${cs.length > 1 ? ` <span class="chip c-p" title="${esc(cs.slice(1).map(c => c.name).join(", "))}">+${cs.length - 1} more</span>` : ""}<span hidden>${esc(cs.slice(1).map(c => c.name + " " + (c.role || "")).join(" "))}</span>` : "–" },
         m.email || m.phone || "–", bDepts(b).join(", ") || "–", b.payment, b.incoterm, st(b.status || "Active")], act: { act: "buyerView", id: b.id } }; }),
-      { tools: `<small class="mute">Click a buyer to see details</small><input class="pk sr" type="search" data-act="bsearch" data-k="dir" placeholder="Search buyer, country, contact…" value="${esc(UI.sq.dir || "")}" aria-label="Search buyers">${stf}`, empty: "No buyers match. Click New to register one." });
-
-    const profile = sel ? Card(`Buyer profile`, `<div class="vh sm">${buyerLogo(sel, "md")}<div><b>${esc(sel.name)}</b><small class="mute blk">${esc(sel.country || "")} · ${esc(sel.status || "Active")}</small></div></div><div class="res bp"><span>Country</span><b>${esc(sel.country || "–")}</b><span>Currency</span><b>${esc(sel.currency || "–")}</b><span>Payment terms</span><b>${esc(sel.payment || "–")}</b><span>Incoterms</span><b>${esc(sel.incoterm || "–")}</b><span>Departments</span><b>${esc(bDepts(sel).join(", ") || "–")}</b><span>Portal</span><b>${esc(sel.portal || "–")}</b><span>Holidays</span><b>${esc(sel.calendar || "–")}</b><span>Orders</span><b>${selSum.n} (${selSum.open} open) · ${num(selSum.qty)} pcs · ${money(selSum.value)}</b></div>`
-      + `<h3 class="sub3">Contact persons <span class="chip c-p">${bContacts(sel).length}</span></h3>`
-      + bContactsHtml(sel)
-      + `<h3 class="sub3">Profile checklist <span class="chip c-${profDone === prof.length ? "ok" : "w"}">${profDone}/${prof.length}</span></h3>`
-      + CK("", prof.map(p => ({ label: p.label, note: p.ok ? "Done" : "Missing", s: p.ok ? "ok" : "no", act: { act: "edit", col: "buyers", id: sel.id } })), { bare: true })
-      + (sel.manual ? `<p class="note"><b>Buyer manual:</b> ${esc(sel.manual)}</p>` : "")
-      + `<div class="card-foot"><button class="btn sm" data-act="buyerEdit" data-id="${esc(sel.id)}">Edit buyer</button><button class="btn sm g" data-act="newOrderFor" data-b="${esc(sel.name)}">New order for ${esc(sel.name)}</button></div>`, tools)
-      : CK("Buyer profile", [], { empty: "No buyers yet. Click New to register one." });
-
-    return KP([
-      ["Total buyers", all.length, "Registered buyer accounts"],
-      ["Active buyers", active.length, `${all.length - active.length} inactive`, active.length ? "ok" : "wn"],
-      ["Currencies used", cur.length, cur.join(" / ") || "None yet"],
-      ["Linked orders", linked.length, `POs across ${new Set(linked.map(o => o.buyer)).size} buyers`]
-    ]) + directory
-      + `<div class="g2">${profile}${sel ? `<div class="stack">${
-        CK(`Technical requirements, ${sel.name}`, BUYER_TECH.map((l, j) => ({ label: l, note: LABEL[tech[j] || "no"], s: tech[j] || "no", act: { act: "btech", id: sel.id, i: j } })),
-          { foot: `<p class="mute note">Click an item to change it: missing → in progress → done → not needed.</p>` })
-      }${
-        Card("Buyer-specific procedures", `<div class="fl">${[["Sample, inspection and packing", sel.procedures], ["Portal access", sel.portalAccess], ["Compliance notes", sel.manual]].map(([t, v]) => `<div class="f"><i class="${v ? "ok" : "no"}">${v ? "✓" : "–"}</i><b>${esc(t)}<small class="blk">${esc(v || "Not recorded yet")}</small></b></div>`).join("")}</div>`)
-      }</div>` : ""}</div>`;
+      { tools: `<small class="mute">Click a buyer to see details</small><input class="pk sr" type="search" data-act="bsearch" data-k="dir" placeholder="Search buyer, country, contact…" value="${esc(UI.sq.dir || "")}" aria-label="Search buyers">${stf}`, empty: "No buyers match. Click Add new buyer to register one." });
   }
 });
 Actions.newOrderFor = el => Crud.create("orders", { buyer: el.dataset.b });

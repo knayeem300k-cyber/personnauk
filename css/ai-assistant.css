@@ -93,3 +93,25 @@
   .ai .bx.neon,.ai .bx.neon::before,.ai .bx.pop,.ai .chp.pop,.ai .cds.pop .cd,.ai .h .orb{animation:none}
   .ai .bx.neon{box-shadow:var(--in),0 0 20px rgba(123,47,247,.4)}
 }
+
+/* Claude connection badge, live answer and formatted replies */
+.ai .aib{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:6px 14px;border-radius:20px;border:0;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--card);color:var(--mute);box-shadow:var(--sh)}
+.ai .aib i{width:8px;height:8px;border-radius:50%;background:var(--mute)}
+.ai .aib.on{color:var(--ink)}
+.ai .aib.on i{background:var(--ok);box-shadow:0 0 0 3px rgba(31,169,113,.2)}
+.ai .cvf{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap}
+.ai .cvf .aib{margin-top:0}
+.ai .am h4{margin:12px 0 6px;font-size:14px}
+.ai .am ol{margin:6px 0 10px;padding-left:20px}
+.ai .am code{font-size:12.5px;padding:1px 6px;border-radius:6px;background:var(--card)}
+.ai .am .tw{margin:8px 0 10px}
+.ai .am table{min-width:0;font-size:13px}
+.ai .am .mf{margin-top:10px;font-size:11.5px;color:var(--mute)}
+.ai .thinking{color:var(--mute)}
+.ai .thinking span{animation:aiDot 1.2s infinite both}
+.ai .thinking span:nth-child(2){animation-delay:.2s}
+.ai .thinking span:nth-child(3){animation-delay:.4s}
+@keyframes aiDot{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.ai .cursor{display:inline-block;width:7px;height:15px;margin-left:2px;vertical-align:-2px;background:var(--ac);animation:aiDot 1s infinite}
+.ck-note{margin-top:4px}
+@media(prefers-reduced-motion:reduce){.ai .thinking span,.ai .cursor{animation:none}}

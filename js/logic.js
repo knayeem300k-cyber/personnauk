@@ -28,6 +28,18 @@ const Logic = {
   active() { return Store.all("orders").filter(o => !this.info(o).closed); },
   docCount(o, s) { const a = o.docs[s]; return { done: a.filter(isDone).length, total: a.length }; },
 
+  /* Profit on an order: (order price − cost per piece from its costing sheet) × quantity.
+     Returns null when the style has no costing sheet. */
+  orderProfit(o) {
+    const c = Store.all("costings").find(x => x.style === o.style);
+    if (!c) return null;
+    const cost = this.fob(c) - (+c.profit || 0), qty = +o.qty || 0, value = qty * (+o.price || 0);
+    return { value, profit: qty * ((+o.price || 0) - cost) };
+  },
+  marginOf(orders) {
+    const known = orders.map(o => this.orderProfit(o)).filter(Boolean), value = sum(known, k => k.value);
+    return { known: known.length, value, profit: sum(known, k => k.profit), pct: value ? sum(known, k => k.profit) / value * 100 : null };
+  },
   fob(c) { return ["fabric", "trims", "cm", "wastage", "commercial", "profit"].reduce((s, k) => s + (+c[k] || 0), 0); },
   secDone(s) { return SECTIONS.filter(([k]) => String(s["s_" + k] || "").trim()).length; },
 

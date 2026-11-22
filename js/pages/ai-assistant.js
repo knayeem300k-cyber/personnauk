@@ -211,12 +211,24 @@ const AIE = {
   }
 };
 
-function aiSay(q, file) {
+/* Send a message: to Claude when a key is saved, otherwise to the offline assistant */
+function aiSay(q, file, fileObj) {
+  if (typeof CLAUDE !== "undefined" && CLAUDE.busy) return toast("Please wait for the current answer.");
   AI.msgs.push({ r: "u", t: q, f: file });
+  if (typeof CLAUDE !== "undefined" && CLAUDE.on()) {
+    if (location.hash !== "#ai") location.hash = "#ai";
+    CLAUDE.send(q, fileObj);
+    return;
+  }
   let h;
   try { h = AIE.reply(q, file); } catch (e) { console.error(e); h = "<p>Sorry, something went wrong while reading your data.</p>"; }
   AI.msgs.push({ r: "a", h });
   if (location.hash !== "#ai") { location.hash = "#ai"; return; }
+  aiShow();
+}
+/* Re-draw the chat and keep the newest message in view */
+function aiShow() {
+  if (location.hash !== "#ai") return;
   App.render();
   const um = document.querySelectorAll(".ai .um");
   if (um.length) um[um.length - 1].scrollIntoView({ block: "start", behavior: "smooth" });
@@ -231,8 +243,17 @@ Actions.aiChip = el => {
   aiSay(q === "po" ? "Check all open POs" : "Draft an email to the buyer");
 };
 Actions.aiAttach = () => document.getElementById("aiFile").click();
-Actions.aiFile = el => { const f = el.files[0]; if (f) aiSay("Read this tech pack and fill in the style details.", f.name); };
-Actions.aiNew = () => { AI.msgs = []; App.render(); };
+Actions.aiFile = el => {
+  const f = el.files[0];
+  el.value = "";
+  if (!f) return;
+  const typed = (document.getElementById("aiIn") || {}).value || "";
+  aiSay(typed.trim() || "Read this tech pack and list the style details. Point out anything missing.", f.name, f);
+};
+Actions.aiNew = () => {
+  if (typeof CLAUDE !== "undefined") { if (CLAUDE.busy) return toast("Please wait for the current answer."); CLAUDE.reset(); }
+  AI.msgs = []; App.render();
+};
 Actions.aiCopy = el => {
   const t = document.getElementById(el.dataset.t).innerText;
   if (navigator.clipboard) navigator.clipboard.writeText(t).then(() => toast("Email copied"), () => toast("Copy failed. Select the text and copy it."));
@@ -259,12 +280,14 @@ Pages.add({
   render() {
     const pop = AI.visit !== App.visit ? " pop" : "";
     AI.visit = App.visit;
-    const log = AI.msgs.map(m => m.r === "u" ? `<div class="um">${esc(m.t)}${m.f ? `<small>${aiI("d")}${esc(m.f)}</small>` : ""}</div>` : `<div class="am">${m.h}</div>`).join("");
-    return `<div class="ai" data-v="${AI.msgs.length ? "chat" : "home"}"><div class="mid"><div class="h"><div class="orb"></div><h2>Ready to work on your next order?</h2><p>Check a PO, find what is late, read a tech pack or draft a buyer email. Ask in English or Banglish.</p></div>
-<div class="cv">${log}<button class="nw" data-act="aiNew">Start a new chat</button></div></div>
+    const log = AI.msgs.map(m => m.r === "u" ? `<div class="um">${esc(m.t)}${m.f ? `<small>${aiI("d")}${esc(m.f)}</small>` : ""}</div>` : `<div class="am"${m.live ? ' id="aiLive"' : ""}>${m.h}</div>`).join("");
+    const cl = typeof CLAUDE !== "undefined" && CLAUDE.on();
+    const badge = `<button class="aib${cl ? " on" : ""}" data-act="claudeSettings" title="Claude settings"><i></i>${cl ? esc(CLAUDE.name()) : "Offline assistant · connect Claude"}</button>`;
+    return `<div class="ai" data-v="${AI.msgs.length ? "chat" : "home"}"><div class="mid"><div class="h"><div class="orb"></div><h2>Ready to work on your next order?</h2><p>Check a PO, find what is late, read a tech pack or draft a buyer email. Ask in Bangla, Banglish or English.</p>${badge}</div>
+<div class="cv">${log}<div class="cvf">${badge}<button class="nw" data-act="aiNew">Start a new chat</button></div></div></div>
 <div class="chp${pop}"><button data-act="aiChip" data-q="tp">Read tech pack ${aiI("d")}</button><button data-act="aiChip" data-q="po">Check a PO ${aiI("k")}</button><button data-act="aiChip" data-q="email">Draft an email ${aiI("e")}</button></div>
 <div class="bx neon${pop}"><div class="q">${aiI("s")}<textarea id="aiIn" rows="1" placeholder="Ask anything about your orders…" aria-label="Message"></textarea></div><div class="tl"><button data-act="aiAttach">${aiI("c")}Attach</button><i></i><button data-act="aiAsk" data-q="help">${aiI("l")}What can I ask?</button><i></i><button data-act="aiAsk" data-q="What needs attention today?">${aiI("g")}Today</button><span class="rt"><button class="r" data-act="aiVoice" aria-label="Voice">${aiI("m")}</button><button class="r go" data-act="aiSend" aria-label="Send">${aiI("u")}</button></span></div></div>
-<input type="file" id="aiFile" data-act="aiFile" hidden>
+<input type="file" id="aiFile" data-act="aiFile" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.txt,.csv,.md" hidden>
 <div class="cds${pop}"><div class="cd" role="button" tabindex="0" data-act="aiChip" data-q="tp"><div class="t"><span>${aiI("d")}</span>Tech Pack Reader<em>Read file</em></div><p>Match a tech pack file to its style and show the fabric, sizes, trims and missing sections.</p></div><div class="cd" role="button" tabindex="0" data-act="aiChip" data-q="po"><div class="t"><span>${aiI("k")}</span>PO Review<em>Check PO</em></div><p>Compare a PO with the contract and costing and flag date or price differences.</p></div><div class="cd" role="button" tabindex="0" data-act="aiChip" data-q="email"><div class="t"><span>${aiI("e")}</span>Email Drafts<em>Write email</em></div><p>Reply to buyers in a clear, polite tone, based on the real issues on the order.</p></div></div></div>`;
   }
 });

@@ -176,3 +176,15 @@ small.blk{display:block;text-align:left;margin-top:3px;font-weight:500;white-spa
 /* BOM totals */
 .res.bomt{margin-top:16px}
 .res.bomt b:last-of-type{color:var(--mute)}
+
+/* Dashboard profit margin cell */
+.mg{display:inline-flex;align-items:center;gap:10px}
+.mg b{min-width:46px}
+.mg.ok b{color:var(--ok)}.mg.wn b{color:var(--wn)}.mg.bd b{color:var(--bd)}
+.mg.ok .mbar i{background:linear-gradient(90deg,#1fa971,#43d6a0)}
+.mg.wn .mbar i{background:linear-gradient(90deg,#e08a1e,#ffc46b)}
+.mg.bd .mbar i{background:var(--bd)}
+
+/* Single-column buyer popup */
+.vw:has(.vone){width:min(720px,100%)}
+.vone .sub3:first-child{margin-top:4px}
